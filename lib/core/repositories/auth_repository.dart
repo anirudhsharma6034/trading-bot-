@@ -1,17 +1,29 @@
 import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
+import '../../models/user_model.dart';
 
 class AuthRepository {
   final dbHelper = DatabaseHelper.instance;
 
-  Future<bool> login(String email, String password) async {
+  Future<dynamic> login(String email, String password) async {
     final db = await dbHelper.database;
-    final result = await db.query(
+    
+    final emailCheck = await db.query(
       'users',
-      where: 'email = ? AND password = ?',
-      whereArgs: [email, password],
+      where: 'email = ?',
+      whereArgs: [email],
     );
-    return result.isNotEmpty;
+
+    if (emailCheck.isEmpty) {
+      return 'invalid_email';
+    }
+
+    final user = emailCheck.first;
+    if (user['password'] != password) {
+      return 'invalid_password';
+    }
+
+    return UserModel.fromMap(user); // Success: Return user model
   }
 
   Future<bool> register(String name, String email, String password) async {
@@ -31,5 +43,10 @@ class AuthRepository {
     } catch (e) {
       return false;
     }
+  }
+
+  Future<void> updateProfile(int userId, String newName) async {
+    final db = await dbHelper.database;
+    await db.update('users', {'name': newName}, where: 'id = ?', whereArgs: [userId]);
   }
 }

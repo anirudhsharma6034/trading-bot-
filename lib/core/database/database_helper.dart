@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // Incremented version to support password column
+      version: 4, // Increment to reset demo password 
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -34,7 +34,8 @@ class DatabaseHelper {
         password TEXT NOT NULL,
         name TEXT NOT NULL,
         balance REAL NOT NULL,
-        available_cash REAL NOT NULL
+        available_cash REAL NOT NULL,
+        profile_picture TEXT
       )
     ''');
 
@@ -172,37 +173,28 @@ class DatabaseHelper {
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Recreate users table with password if upgrading from v1
-      await db.execute('DROP TABLE IF EXISTS users');
-      await db.execute('''
-        CREATE TABLE users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          email TEXT NOT NULL UNIQUE,
-          password TEXT NOT NULL,
-          name TEXT NOT NULL,
-          balance REAL NOT NULL,
-          available_cash REAL NOT NULL
-        )
-      ''');
+    if (oldVersion < 4) {
+      // Recreating the default test user so the new strict password rule is satisfied
+      await db.execute("DELETE FROM users WHERE email = 'trader@example.com'");
       await db.insert('users', {
         'name': 'Trader Demo',
         'email': 'trader@example.com',
-        'password': 'password123',
+        'password': 'password123!', // Now includes a special character to fit regex
         'balance': 100000.0,
         'available_cash': 75000.0,
+        'profile_picture': null,
       });
     }
   }
 
   Future<void> _insertInitialData(Database db) async {
-    // Insert default demo user
     await db.insert('users', {
       'name': 'Trader Demo',
       'email': 'trader@example.com',
-      'password': 'password123',
+      'password': 'password123!', // Fits strict regex
       'balance': 100000.0,
       'available_cash': 75000.0,
+      'profile_picture': null,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
     final initialStocks = [

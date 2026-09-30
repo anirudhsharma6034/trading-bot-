@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/portfolio_provider.dart';
 import '../../providers/trading_provider.dart';
@@ -17,8 +18,9 @@ class PortfolioScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Portfolio & Positions', style: TextStyle(fontWeight: FontWeight.bold)),
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            onTap: (_) => HapticFeedback.selectionClick(), // Vibrate on Tab change
+            tabs: const [
               Tab(text: 'Open Positions'),
               Tab(text: 'Trade History'),
             ],
@@ -32,6 +34,9 @@ class PortfolioScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4)),
+                ],
               ),
               child: Column(
                 children: [
@@ -54,14 +59,14 @@ class PortfolioScreen extends StatelessWidget {
                 children: [
                   // Open Positions Tab
                   tradingProv.positions.isEmpty
-                      ? const Center(child: Text('No open positions'))
+                      ? const Center(child: Text('No open positions', style: TextStyle(color: Colors.grey)))
                       : ListView.builder(
                           itemCount: tradingProv.positions.length,
                           itemBuilder: (context, index) {
                             final pos = tradingProv.positions[index];
                             return ListTile(
                               title: Text(pos.symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text('Qty: ${pos.quantity} • Avg: ₹${pos.averagePrice}'),
+                              subtitle: Text('Qty: ${pos.quantity} • Avg: ₹${pos.averagePrice.toStringAsFixed(2)}'),
                               trailing: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -75,15 +80,15 @@ class PortfolioScreen extends StatelessWidget {
                         ),
                   // Trade History Tab
                   tradingProv.trades.isEmpty
-                      ? const Center(child: Text('No trade history'))
+                      ? const Center(child: Text('No trade history', style: TextStyle(color: Colors.grey)))
                       : ListView.builder(
                           itemCount: tradingProv.trades.length,
                           itemBuilder: (context, index) {
                             final trade = tradingProv.trades[index];
                             return ListTile(
                               title: Text('${trade.side} ${trade.symbol}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text('Qty: ${trade.quantity} @ ₹${trade.entryPrice}'),
-                              trailing: Text('₹${trade.pnl}', style: TextStyle(color: trade.pnl >= 0 ? Colors.green : Colors.red, fontWeight: FontWeight.bold)),
+                              subtitle: Text('Qty: ${trade.quantity} @ ₹${trade.entryPrice.toStringAsFixed(2)}'),
+                              trailing: Text('₹${trade.pnl.toStringAsFixed(2)}', style: TextStyle(color: trade.pnl >= 0 ? Colors.green : Colors.red, fontWeight: FontWeight.bold)),
                             );
                           },
                         ),

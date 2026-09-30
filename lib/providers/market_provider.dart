@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../models/stock_model.dart';
 import '../core/repositories/market_repository.dart';
@@ -14,6 +15,48 @@ class MarketProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
   String get selectedSector => _selectedSector;
+
+  // Initial Seeded News
+  List<Map<String, dynamic>> _newsList = [
+    {
+      'title': 'RBI holds interest rates steady at 6.5%',
+      'source': 'Financial Times',
+      'sentiment': 'Neutral',
+      'timestamp': DateTime.now().subtract(const Duration(minutes: 10)),
+    },
+    {
+      'title': 'Tech stocks rally as IT sector shows strong Q3 earnings',
+      'source': 'Market Watch',
+      'sentiment': 'Bullish',
+      'timestamp': DateTime.now().subtract(const Duration(minutes: 32)),
+    },
+    {
+      'title': 'Global supply chain issues hit Auto sector stocks',
+      'source': 'Bloomberg',
+      'sentiment': 'Bearish',
+      'timestamp': DateTime.now().subtract(const Duration(hours: 1)),
+    },
+    {
+      'title': 'Reliance Industries announces mega green energy project',
+      'source': 'Reuters',
+      'sentiment': 'Bullish',
+      'timestamp': DateTime.now().subtract(const Duration(hours: 2)),
+    },
+  ];
+
+  // Pool of random headlines to simulate incoming news
+  final List<Map<String, dynamic>> _newsPool = [
+    {'title': 'Crude oil prices drop unexpectedly', 'source': 'Reuters', 'sentiment': 'Bullish'},
+    {'title': 'FIIs pump ₹5,000 Cr into Indian equities', 'source': 'Mint', 'sentiment': 'Bullish'},
+    {'title': 'Inflation data raises concerns for FMCG sector', 'source': 'CNBC TV18', 'sentiment': 'Bearish'},
+    {'title': 'Banking stocks slip on profit booking', 'source': 'Bloomberg', 'sentiment': 'Bearish'},
+    {'title': 'Government announces new export subsidies', 'source': 'Financial Times', 'sentiment': 'Bullish'},
+    {'title': 'Rupee hits record low against US Dollar', 'source': 'Market Watch', 'sentiment': 'Bearish'},
+    {'title': 'Top IT firm wins \\\$1 Billion contract', 'source': 'Mint', 'sentiment': 'Bullish'}, // Escaped $ sign
+    {'title': 'Regulatory body issues new guidelines for brokers', 'source': 'Reuters', 'sentiment': 'Neutral'},
+  ];
+
+  List<Map<String, dynamic>> get newsList => _newsList;
 
   List<Stock> get filteredStocks {
     return _stocks.where((stock) {
@@ -46,6 +89,23 @@ class MarketProvider extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  // Method to simulate adding a new random news headline
+  void generateRandomNews() {
+    final random = Random();
+    // 30% chance to generate news in a given tick
+    if (random.nextDouble() > 0.70) {
+      final newNews = Map<String, dynamic>.from(_newsPool[random.nextInt(_newsPool.length)]);
+      newNews['timestamp'] = DateTime.now();
+      
+      _newsList.insert(0, newNews); // Add to top
+      
+      if (_newsList.length > 20) {
+        _newsList.removeLast(); // Keep list size manageable
+      }
+      notifyListeners();
+    }
   }
 
   void setSearchQuery(String query) {

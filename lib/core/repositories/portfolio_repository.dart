@@ -21,4 +21,32 @@ class PortfolioRepository {
       await db.insert('portfolio', portfolio.toMap());
     }
   }
+
+  Future<void> addFunds(double amount) async {
+    final db = await dbHelper.database;
+    final result = await db.query('portfolio');
+    if (result.isNotEmpty) {
+      final p = PortfolioModel.fromMap(result.first);
+      await db.update('portfolio', {
+        'total_value': p.totalValue + amount,
+        'available_cash': p.availableCash + amount,
+      }, where: 'id = ?', whereArgs: [p.id]);
+    }
+  }
+
+  Future<bool> withdrawFunds(double amount) async {
+    final db = await dbHelper.database;
+    final result = await db.query('portfolio');
+    if (result.isNotEmpty) {
+      final p = PortfolioModel.fromMap(result.first);
+      if (p.availableCash >= amount) {
+        await db.update('portfolio', {
+          'total_value': p.totalValue - amount,
+          'available_cash': p.availableCash - amount,
+        }, where: 'id = ?', whereArgs: [p.id]);
+        return true;
+      }
+    }
+    return false;
+  }
 }

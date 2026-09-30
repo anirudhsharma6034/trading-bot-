@@ -24,4 +24,17 @@ class PortfolioProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<void> addFunds(double amount) async {
+    await _portfolioRepo.addFunds(amount);
+    await loadPortfolio();
+  }
+
+  Future<bool> withdrawFunds(double amount) async {
+    final success = await _portfolioRepo.withdrawFunds(amount);
+    if (success) {
+      await loadPortfolio();
+    }
+    return success;
+  }
 }

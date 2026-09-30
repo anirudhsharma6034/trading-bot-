@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/bot_provider.dart';
 import '../../models/bot_model.dart';
+import 'package:toastification/toastification.dart';
 
 class BotsScreen extends StatelessWidget {
   const BotsScreen({super.key});
 
   void _showCreateBotModal(BuildContext context) {
+    HapticFeedback.heavyImpact(); // Pro feel when opening modal
     final nameController = TextEditingController(text: 'MA Crossover Bot');
     final symbolController = TextEditingController(text: 'RELIANCE');
     final capitalController = TextEditingController(text: '25000');
@@ -36,6 +39,7 @@ class BotsScreen extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB)),
                 onPressed: () {
+                  HapticFeedback.mediumImpact(); // Confirmation vibration
                   final bot = BotModel(
                     name: nameController.text,
                     symbol: symbolController.text,
@@ -55,6 +59,18 @@ class BotsScreen extends StatelessWidget {
                   );
                   Provider.of<BotProvider>(context, listen: false).createBot(bot);
                   Navigator.pop(context);
+                  
+                  toastification.show(
+                    context: context,
+                    title: const Text('Bot Created Successfully', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                    type: ToastificationType.success,
+                    style: ToastificationStyle.flat,
+                    autoCloseDuration: const Duration(seconds: 3),
+                    alignment: Alignment.topCenter,
+                    backgroundColor: const Color(0xFF1E293B),
+                    icon: const Icon(Icons.smart_toy, color: Colors.green),
+                    showProgressBar: false,
+                  );
                 },
                 child: const Text('Deploy Bot', style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
@@ -81,7 +97,7 @@ class BotsScreen extends StatelessWidget {
         ],
       ),
       body: botProv.bots.isEmpty
-          ? const Center(child: Text('No active bots. Click + to create one.'))
+          ? const Center(child: Text('No active bots. Click + to create one.', style: TextStyle(color: Colors.grey)))
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: botProv.bots.length,
@@ -93,6 +109,9 @@ class BotsScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4)),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +123,7 @@ class BotsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: bot.status == 'Running' ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                              color: bot.status == 'Running' ? Colors.green.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(bot.status, style: TextStyle(color: bot.status == 'Running' ? Colors.green : Colors.orange)),
@@ -126,13 +145,19 @@ class BotsScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton.icon(
-                            onPressed: () => botProv.toggleBotStatus(bot.id!, bot.status),
+                            onPressed: () {
+                              HapticFeedback.selectionClick(); // Vibrate when toggling bot status
+                              botProv.toggleBotStatus(bot.id!, bot.status);
+                            },
                             icon: Icon(bot.status == 'Running' ? Icons.pause : Icons.play_arrow),
                             label: Text(bot.status == 'Running' ? 'Pause' : 'Start'),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () => botProv.deleteBot(bot.id!),
+                            onPressed: () {
+                              HapticFeedback.vibrate(); // Vibrate when deleting bot
+                              botProv.deleteBot(bot.id!);
+                            },
                           ),
                         ],
                       ),
